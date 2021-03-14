@@ -1,12 +1,12 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "update-photo-type",
+    "title": "follow-user-type",
     "type": "object",
     "properties": {
-      "description": {
+      "userId": {
         "type": "string"
       }
     },
-    "required": ["description"],
+    "required": ["userId"],
     "additionalProperties": false
   }

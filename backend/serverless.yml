@@ -57,6 +57,9 @@ custom:
       - name: UpdatePhotoRequest
         contentType: application/json
         schema: ${file(models/update-photo-request.json)}
+      - name: FollowUserRequest
+        contentType: application/json
+        schema: ${file(models/follow-user-request.json)}
 
 functions:
   GeneratePhotoUploadData:
@@ -112,7 +115,26 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
-
+  
+  FollowUser:
+    handler: src/lambda/http/followUser.handler
+    events:
+      - http:
+          method: post
+          path: follow
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Follow a User
+            description: Follow a User
+            requestModels:
+              application/json: FollowUserRequest
+    iamRoleStatementsName: ${self:service.name}-follow-user-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.FOLLOWS_TABLE}
 
 
 resources:
