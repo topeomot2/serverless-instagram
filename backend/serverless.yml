@@ -38,8 +38,21 @@ provider:
     USER_STATS_TABLE: User-stats-${self:provider.stage}
 
 functions:
-  hello:
-    handler: handler.hello
+  GeneratePhotoUploadData:
+    handler: src/lambda/http/generatePhotoUploadData.handler
+    events:
+      - http:
+          method: post
+          path: photos/upload
+          cors: true
+    iamRoleStatementsName: ${self:service.name}-generate-upload-data-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+        Resource: arn:aws:s3:::${self:provider.environment.PHOTOS_S3_BUCKET}/*
+
+
 
 resources:
   Resources:
