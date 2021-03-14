@@ -54,6 +54,9 @@ custom:
       - name: CreatePhotoRequest
         contentType: application/json
         schema: ${file(models/create-photo-request.json)}
+      - name: UpdatePhotoRequest
+        contentType: application/json
+        schema: ${file(models/update-photo-request.json)}
 
 functions:
   GeneratePhotoUploadData:
@@ -88,6 +91,26 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
+
+  UpdatePhoto:
+    handler: src/lambda/http/updatePhoto.handler
+    events:
+      - http:
+          method: patch
+          path: photos/{photoId}
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Update a Photo
+            description: Update a Photo
+            requestModels:
+              application/json: UpdatePhotoRequest
+    iamRoleStatementsName: ${self:service.name}-update-photo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
 
 
