@@ -16,6 +16,12 @@ service: instagram-serverless-app
 #app: your-app-name
 #org: your-org-name
 
+plugins:
+  - serverless-webpack
+  - serverless-iam-roles-per-function
+  - serverless-reqvalidator-plugin
+  - serverless-aws-documentation
+
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 frameworkVersion: '2'
@@ -37,6 +43,18 @@ provider:
     FOLLOWERS_INDEX: FollowersIndex
     USER_STATS_TABLE: User-stats-${self:provider.stage}
 
+custom:
+  documentation:
+    api:
+      info:
+        version: v0.0.1
+        title: Photo Api
+        description: Deal with Photo items
+    models:
+      - name: CreatePhotoRequest
+        contentType: application/json
+        schema: ${file(models/create-photo-request.json)}
+
 functions:
   GeneratePhotoUploadData:
     handler: src/lambda/http/generatePhotoUploadData.handler
@@ -51,11 +69,39 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.PHOTOS_S3_BUCKET}/*
+    
+  CreatePhoto:
+    handler: src/lambda/http/createPhoto.handler
+    events:
+      - http:
+          method: post
+          path: photos
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: Create a new Photo
+            description: Create a new Photo
+            requestModels:
+              application/json: CreatePhotoRequest
+    iamRoleStatementsName: ${self:service.name}-create-photo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
 
 
 
 resources:
   Resources:
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:

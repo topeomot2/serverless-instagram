@@ -1,0 +1,18 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "create-photo-type",
+    "type": "object",
+    "properties": {
+      "photoId": {
+        "type": "string"
+      },
+      "photoUrl": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      }
+    },
+    "required": ["photoId", "photoUrl", "description"],
+    "additionalProperties": false
+  }
