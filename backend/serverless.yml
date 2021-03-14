@@ -60,6 +60,9 @@ custom:
       - name: FollowUserRequest
         contentType: application/json
         schema: ${file(models/follow-user-request.json)}
+      - name: UnFollowUserRequest
+        contentType: application/json
+        schema: ${file(models/unfollow-user-request.json)}
 
 functions:
   GeneratePhotoUploadData:
@@ -135,7 +138,36 @@ functions:
         Action:
           - dynamodb:PutItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.FOLLOWS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
 
+  UnFollowUser:
+    handler: src/lambda/http/unFollowUser.handler
+    events:
+      - http:
+          method: delete
+          path: follow
+          cors: true
+          reqValidatorName: RequestBodyValidator
+          documentation:
+            summary: UnFollow a User
+            description: UnFollow a User
+            requestModels:
+              application/json: UnFollowUserRequest
+    iamRoleStatementsName: ${self:service.name}-unfollow-user-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.FOLLOWS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
 
 resources:
   Resources:

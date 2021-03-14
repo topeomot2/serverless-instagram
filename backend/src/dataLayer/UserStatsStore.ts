@@ -56,4 +56,38 @@ export default class UserStatsStore {
         
       return
     }
+
+
+    async decrease(stat: string, by: number, userId: string) {
+      try {
+          const response = await this.docClient
+          .update({
+          TableName: userStatsTable,
+          Key: { userId },
+          UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)- :incr`,
+          ExpressionAttributeValues: {":incr":{"N":`${by}`}, ":start": by},
+          ReturnValues: 'UPDATED_NEW'
+          })
+          .promise()
+
+          if(response.$response.error) {
+              const createdAt = new Date().toISOString()
+              let newItem = {
+                  userId,
+                  followers: 0,
+                  follows: 0,
+                  createdAt
+              }
+
+              newItem[`${stat}`] = by
+
+              await this.add(newItem)
+          }
+
+      } catch (error) {
+          
+      }
+      
+    return
+  }
 }
