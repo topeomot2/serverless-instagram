@@ -1,12 +1,12 @@
 import * as AWS from 'aws-sdk'
 import { S3 } from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-import * as AWSXRay from 'aws-xray-sdk'
+// import * as AWSXRay from 'aws-xray-sdk'
 
 import { PhotoItem } from '../models/PhotoItem'
 import { UpdatePhotoRequest } from '../requests/UpdatPhotoRequest'
 
-const XAWS = AWSXRay.captureAWS(AWS)
+// const XAWS = AWSXRay.captureAWS(AWS)
 const photosTable = process.env.PHOTOS_TABLE
 const bucketName = process.env.PHOTOS_IMAGE_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
@@ -54,7 +54,7 @@ export default class PhotoStore {
     return
   }
 
-  async get(photoId?: string): Promise<PhotoItem> {
+  async get(photoId: string): Promise<PhotoItem> {
     const result = await this.docClient
       .get({
         Key: {

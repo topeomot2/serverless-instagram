@@ -33,6 +33,8 @@ provider:
     USER_ID_INDEX: UserIdIndex
     PHOTOS_S3_BUCKET: instagram-serverless-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
+    FOLLOWS_TABLE: Follows-${self:provider.stage}
+    FOLLOWERS_INDEX: FollowersIndex
 
 functions:
   hello:
@@ -69,6 +71,30 @@ resources:
           - IndexName: ${self:provider.environment.USER_ID_INDEX}
             KeySchema:
             - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+    FollowDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: createdAt
+            KeyType: RANGE  
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.FOLLOWS_TABLE}
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.FOLLOWERS_INDEX}
+            KeySchema:
+            - AttributeName: followedId
               KeyType: HASH
             - AttributeName: createdAt
               KeyType: RANGE
