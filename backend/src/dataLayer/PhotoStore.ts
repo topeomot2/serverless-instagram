@@ -37,12 +37,13 @@ export default class PhotoStore {
 
   async update(
     photoId: string,
+    userId: string,
     updatePhoto: UpdatePhotoRequest
   ): Promise<void> {
     await this.docClient
       .update({
         TableName: photosTable,
-        Key: { photoId },
+        Key: { photoId, userId },
         UpdateExpression: 'set description=:description',
         ExpressionAttributeValues: {
           ':description': updatePhoto.description
@@ -87,7 +88,7 @@ export default class PhotoStore {
     return []
   }
 
-  getAttachmentPresignedUrl(photoId: string): string {
+  getPhotoPresignedUrl(photoId: string): string {
     return this.s3.getSignedUrl('putObject', {
       Bucket: bucketName,
       Key: `${photoId}_image.png`,

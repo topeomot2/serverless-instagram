@@ -4,7 +4,7 @@ export interface PhotoItem {
     description: string
     createdAt: string
     updatedAt: string
-    photoUrl?: string
+    photoUrl: string
     likes?: number
     views?: number
   }

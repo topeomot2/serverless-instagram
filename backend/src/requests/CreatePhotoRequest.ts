@@ -3,6 +3,7 @@
  */
  export interface CreatePhotoRequest {
     description: string
-    photoUrl?: string
+    photoUrl: string
+    photoId: string
   }
   
