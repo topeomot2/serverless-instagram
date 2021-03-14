@@ -73,17 +73,19 @@ export default class PhotoStore {
   }
 
   async getUserPhotos(userId?: string): Promise<PhotoItem[]> {
-    const result  = await this.docClient.query({
-      TableName : photosTable,
-      IndexName : userIndex,
-      KeyConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
+    const result = await this.docClient
+      .query({
+        TableName: photosTable,
+        IndexName: userIndex,
+        KeyConditionExpression: 'userId = :userId',
+        ExpressionAttributeValues: {
           ':userId': userId
-      },
-      ScanIndexForward: false
-    }).promise()
+        },
+        ScanIndexForward: false
+      })
+      .promise()
 
-    if(result.Count > 0)return result.Items as PhotoItem[]
+    if (result.Count > 0) return result.Items as PhotoItem[]
 
     return []
   }
@@ -98,5 +100,37 @@ export default class PhotoStore {
 
   generatePhotoUrl(photoId: string): string {
     return `https://${bucketName}.s3.amazonaws.com/${photoId}_image.png`
+  }
+
+  async increase(stat: string, by: number, photoId: string) {
+    try {
+      await this.docClient
+        .update({
+          TableName: photosTable,
+          Key: { photoId },
+          UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)+ :incr`,
+          ExpressionAttributeValues: { ':incr': { N: `${by}` }, ':start': 0 },
+          ReturnValues: 'UPDATED_NEW'
+        })
+        .promise()
+    } catch (error) {}
+
+    return
+  }
+
+  async decrease(stat: string, by: number, photoId: string) {
+    try {
+      await this.docClient
+        .update({
+          TableName: photosTable,
+          Key: { photoId },
+          UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)- :incr`,
+          ExpressionAttributeValues: { ':incr': { N: `${by}` }, ':start': by },
+          ReturnValues: 'UPDATED_NEW'
+        })
+        .promise()
+    } catch (error) {}
+
+    return
   }
 }

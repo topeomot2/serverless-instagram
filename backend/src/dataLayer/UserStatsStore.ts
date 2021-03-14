@@ -7,87 +7,84 @@ import { UserStatsItem } from '../models/UserStatsItem'
 const userStatsTable = process.env.USER_STATS_TABLE
 
 export default class UserStatsStore {
-    docClient: DocumentClient
+  docClient: DocumentClient
 
-    constructor() {
-        this.docClient = new AWS.DynamoDB.DocumentClient()
-    }
+  constructor() {
+    this.docClient = new AWS.DynamoDB.DocumentClient()
+  }
 
-    async add(newUserStats: UserStatsItem): Promise<UserStatsItem> {
-        await this.docClient
-        .put({
+  async add(newUserStats: UserStatsItem): Promise<UserStatsItem> {
+    await this.docClient
+      .put({
+        TableName: userStatsTable,
+        Item: newUserStats
+      })
+      .promise()
+
+    return newUserStats
+  }
+
+  async increase(stat: string, by: number, userId: string) {
+    try {
+      const response = await this.docClient
+        .update({
           TableName: userStatsTable,
-          Item: newUserStats
+          Key: { userId },
+          UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)+ :incr`,
+          ExpressionAttributeValues: { ':incr': { N: `${by}` }, ':start': 0 },
+          ReturnValues: 'UPDATED_NEW'
         })
         .promise()
-  
-      return newUserStats
-    }
 
-    async increase(stat: string, by: number, userId: string) {
-        try {
-            const response = await this.docClient
-            .update({
-            TableName: userStatsTable,
-            Key: { userId },
-            UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)+ :incr`,
-            ExpressionAttributeValues: {":incr":{"N":`${by}`}, ":start": 0},
-            ReturnValues: 'UPDATED_NEW'
-            })
-            .promise()
-
-            if(response.$response.error) {
-                const createdAt = new Date().toISOString()
-                let newItem = {
-                    userId,
-                    followers: 0,
-                    follows: 0,
-                    createdAt
-                }
-
-                newItem[`${stat}`] = by
-
-                await this.add(newItem)
-            }
-  
-        } catch (error) {
-            
+      if (response.$response.error) {
+        const createdAt = new Date().toISOString()
+        let newItem = {
+          userId,
+          followers: 0,
+          follows: 0,
+          likes:0,
+          views:0,
+          createdAt
         }
-        
-      return
-    }
 
+        newItem[`${stat}`] = by
 
-    async decrease(stat: string, by: number, userId: string) {
-      try {
-          const response = await this.docClient
-          .update({
+        await this.add(newItem)
+      }
+    } catch (error) {}
+
+    return
+  }
+
+  async decrease(stat: string, by: number, userId: string) {
+    try {
+      const response = await this.docClient
+        .update({
           TableName: userStatsTable,
           Key: { userId },
           UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)- :incr`,
-          ExpressionAttributeValues: {":incr":{"N":`${by}`}, ":start": by},
+          ExpressionAttributeValues: { ':incr': { N: `${by}` }, ':start': by },
           ReturnValues: 'UPDATED_NEW'
-          })
-          .promise()
+        })
+        .promise()
 
-          if(response.$response.error) {
-              const createdAt = new Date().toISOString()
-              let newItem = {
-                  userId,
-                  followers: 0,
-                  follows: 0,
-                  createdAt
-              }
+      if (response.$response.error) {
+        const createdAt = new Date().toISOString()
+        let newItem = {
+          userId,
+          followers: 0,
+          follows: 0,
+          likes:0,
+          views:0,
+          createdAt
+        }
 
-              newItem[`${stat}`] = by
+        newItem[`${stat}`] = by
 
-              await this.add(newItem)
-          }
-
-      } catch (error) {
-          
+        await this.add(newItem)
       }
-      
+    } catch (error) {}
+
     return
   }
 }

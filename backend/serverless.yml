@@ -169,6 +169,49 @@ functions:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
 
+  ViewPhoto:
+    handler: src/lambda/http/likePhoto.handler
+    events:
+      - http:
+          method: post
+          path: photos/{photoId}/views
+          cors: true
+          documentation:
+            summary: View a Photo
+            description: View a Photo
+    iamRoleStatementsName: ${self:service.name}-view-photo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
+  LikePhoto:
+    handler: src/lambda/http/likePhoto.handler
+    events:
+      - http:
+          method: post
+          path: photos/{photoId}/likes
+          cors: true
+          documentation:
+            summary: Like a Photo
+            description: Like a Photo
+    iamRoleStatementsName: ${self:service.name}-like-photo-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:UpdateItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
+
 resources:
   Resources:
     RequestBodyValidator:

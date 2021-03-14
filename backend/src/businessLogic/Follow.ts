@@ -1,7 +1,6 @@
 import FollowStore from "../dataLayer/FollowStore"
 import UserStatsStore from "../dataLayer/UserStatsStore"
 import { FollowItem } from "../models/FollowItem"
-import { UserStatsItem } from "../models/UserStatsItem"
 import { FollowUserRequest } from "../requests/FollowUserRequest"
 import { UnFollowUserRequest } from "../requests/UnFollowRequest"
 
