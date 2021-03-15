@@ -240,6 +240,8 @@ resources:
             AttributeType: S
           - AttributeName: userId
             AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
         KeySchema:
           - AttributeName: photoId
             KeyType: HASH
@@ -263,6 +265,8 @@ resources:
           - AttributeName: userId
             AttributeType: S
           - AttributeName: createdAt
+            AttributeType: S
+          - AttributeName: followedId
             AttributeType: S
         KeySchema:
           - AttributeName: userId

@@ -27,7 +27,7 @@ export async function follow(followRequest: FollowUserRequest, userId: string) {
 }
 
 export async function unFollow(unFollowRequest: UnFollowUserRequest, userId: string) {
-    const item = await followStore.delete( userId,unFollowRequest.userId)
+    await followStore.delete( userId,unFollowRequest.userId)
 
     // update stats for both the user following and the followed user
     // This can be update to work with SQS
