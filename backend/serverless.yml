@@ -78,6 +78,21 @@ functions:
         Action:
           - s3:PutObject
         Resource: arn:aws:s3:::${self:provider.environment.PHOTOS_S3_BUCKET}/*
+
+  GetPhotos:
+    handler: src/lambda/http/getPhotos.handler
+    events:
+      - http:
+          method: get
+          path: photos
+          cors: true
+    iamRoleStatementsName: ${self:service.name}-get-photos-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}/index/${self:provider.environment.USER_ID_INDEX}
+    
     
   CreatePhoto:
     handler: src/lambda/http/createPhoto.handler
@@ -124,7 +139,7 @@ functions:
     events:
       - http:
           method: post
-          path: follow
+          path: follows
           cors: true
           reqValidatorName: RequestBodyValidator
           documentation:
@@ -149,7 +164,7 @@ functions:
     events:
       - http:
           method: delete
-          path: follow
+          path: follows
           cors: true
           reqValidatorName: RequestBodyValidator
           documentation:

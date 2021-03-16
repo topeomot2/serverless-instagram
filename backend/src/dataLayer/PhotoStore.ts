@@ -8,7 +8,7 @@ import { UpdatePhotoRequest } from '../requests/UpdatPhotoRequest'
 
 // const XAWS = AWSXRay.captureAWS(AWS)
 const photosTable = process.env.PHOTOS_TABLE
-const bucketName = process.env.PHOTOS_IMAGE_S3_BUCKET
+const bucketName = process.env.PHOTOS_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 const userIndex = process.env.USER_ID_INDEX
 
@@ -81,6 +81,19 @@ export default class PhotoStore {
         ExpressionAttributeValues: {
           ':userId': userId
         },
+        ScanIndexForward: false
+      })
+      .promise()
+
+    if (result.Count > 0) return result.Items as PhotoItem[]
+
+    return []
+  }
+
+  async getPhotos(): Promise<PhotoItem[]> {
+    const result = await this.docClient
+      .query({
+        TableName: photosTable,
         ScanIndexForward: false
       })
       .promise()

@@ -12,9 +12,11 @@ const userStatsStore = new UserStatsStore()
 
 export async function createPhoto(newPhoto: CreatePhotoRequest, userId: string) {
     const createdAt = new Date().toISOString()
+    const photoUrl = photoStore.generatePhotoUrl(newPhoto.photoId)
     const item = await photoStore.add({
       userId,
       ...newPhoto,
+      photoUrl,
       createdAt,
       updatedAt: createdAt,
       likes: 0,
@@ -27,11 +29,9 @@ export async function createPhoto(newPhoto: CreatePhotoRequest, userId: string) 
 
 export async function getPresignedUrl() {
     const photoId = uuid.v4()
-    const photoUrl = photoStore.generatePhotoUrl(photoId)
     const preSignedUrl = photoStore.getPhotoPresignedUrl(photoId)
     return {
         preSignedUrl,
-        photoUrl,
         photoId
     }
 }
@@ -46,6 +46,10 @@ export async function getPhoto(photoId: string): Promise<PhotoItem> {
 
 export async function getUserPhotos(userId: string): Promise<PhotoItem[]> {
     return await photoStore.getUserPhotos(userId)
+}
+
+export async function getPhotos(): Promise<PhotoItem[]> {
+    return await photoStore.getPhotos()
 }
 
 export async function likePhoto(photoId: string, userId: string): Promise<void> {
