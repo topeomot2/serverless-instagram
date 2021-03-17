@@ -15,10 +15,7 @@ export async function follow(followRequest: FollowUserRequest, userId: string) {
       createdAt
     })
 
-    // await userStatsStore.increaseFollows(userId, 1)
     // update stats for both the user following and the followed user
-    // This can be update to work with SQS
-
     await Promise.all([
         userStatsStore.increaseFollows(userId, 1),
         userStatsStore.increaseFollows(followRequest.userId, 1)
@@ -30,7 +27,6 @@ export async function unFollow(unFollowRequest: UnFollowUserRequest, userId: str
     await followStore.delete( userId,unFollowRequest.userId)
 
     // update stats for both the user following and the followed user
-    // This can be update to work with SQS
     await Promise.all([
         userStatsStore.decreaseFollows(userId, 1),
         userStatsStore.decreaseFollows(unFollowRequest.userId, 1)
