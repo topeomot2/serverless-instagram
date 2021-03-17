@@ -1,16 +1,17 @@
 import * as AWS from 'aws-sdk'
 import { DocumentClient } from 'aws-sdk/clients/dynamodb'
-// import * as AWSXRay from 'aws-xray-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
 import { UserStatsItem } from '../models/UserStatsItem'
 
-// const XAWS = AWSXRay.captureAWS(AWS)
+const XAWS = AWSXRay.captureAWS(AWS)
 const userStatsTable = process.env.USER_STATS_TABLE
 
 export default class UserStatsStore {
   docClient: DocumentClient
 
   constructor() {
-    this.docClient = new AWS.DynamoDB.DocumentClient()
+    // @ts-ignore: Unreachable code error
+    this.docClient = new XAWS.DynamoDB.DocumentClient()
   }
 
   async add(newUserStats: UserStatsItem): Promise<UserStatsItem> {

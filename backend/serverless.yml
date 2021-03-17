@@ -65,6 +65,10 @@ custom:
         contentType: application/json
         schema: ${file(models/unfollow-user-request.json)}
 
+tracing:
+  lambda: true
+  apiGateway: true
+
 functions:
   GeneratePhotoUploadData:
     handler: src/lambda/http/generatePhotoUploadData.handler
