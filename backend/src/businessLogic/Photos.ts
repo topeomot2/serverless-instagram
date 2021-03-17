@@ -5,7 +5,7 @@ import { PhotoItem } from "../models/PhotoItem"
 import { CreatePhotoRequest } from "../requests/CreatePhotoRequest"
 import { UpdatePhotoRequest } from "../requests/UpdatPhotoRequest"
 
-const LIKES = 'likes'
+// const LIKES = 'likes'
 const VIEWS = 'views'
 const photoStore = new PhotoStore()
 const userStatsStore = new UserStatsStore()
@@ -37,7 +37,12 @@ export async function getPresignedUrl() {
 }
 
 export async function updatePhoto(updatedPhoto: UpdatePhotoRequest, photoId: string, userId: string): Promise<void> {
-    return await photoStore.update(photoId, userId, updatedPhoto)
+    const photoItem = await photoStore.getUserPhoto(photoId, userId)
+    if(photoItem) {
+        return await photoStore.update(photoId, updatedPhoto)
+    }
+    return
+    
 }
 
 export async function getPhoto(photoId: string): Promise<PhotoItem> {
@@ -52,22 +57,29 @@ export async function getPhotos(): Promise<PhotoItem[]> {
     return await photoStore.getPhotos()
 }
 
-export async function likePhoto(photoId: string, userId: string): Promise<void> {
+export async function likePhoto(photoId: string): Promise<void> {
     // update stats of user and photo
     // This can be update to work with SQS
+    /*
     await Promise.all([
         photoStore.increase(LIKES, 1, photoId),
         userStatsStore.increase(LIKES, 1, userId)
-    ])
-    return
+    ])*/
+
+    return await photoStore.increaseLikes(photoId)
 }
 
-export async function viewPhoto(photoId: string, userId: string): Promise<void> {
+export async function viewPhoto(photoId: string, userId: string) {
     // update stats of user and photo
     // This can be update to work with SQS
-    await Promise.all([
-        photoStore.increase(VIEWS, 1, photoId),
+    /*await Promise.all([
+        photoStore.increaseViews(1, photoId),
         userStatsStore.increase(VIEWS, 1, userId)
     ])
-    return
+    */
+   return await  Promise.all([
+       photoStore.increaseViews(photoId),
+       userStatsStore.increase(VIEWS, 1, userId)
+    ])
+
 }

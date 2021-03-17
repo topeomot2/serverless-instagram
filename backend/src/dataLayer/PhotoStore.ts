@@ -11,6 +11,7 @@ const photosTable = process.env.PHOTOS_TABLE
 const bucketName = process.env.PHOTOS_S3_BUCKET
 const urlExpiration = process.env.SIGNED_URL_EXPIRATION
 const userIndex = process.env.USER_ID_INDEX
+const photoUserIndex = process.env.PHOTO_ID_INDEX
 
 export default class PhotoStore {
   s3: S3
@@ -37,13 +38,13 @@ export default class PhotoStore {
 
   async update(
     photoId: string,
-    userId: string,
     updatePhoto: UpdatePhotoRequest
   ): Promise<void> {
+
     await this.docClient
       .update({
         TableName: photosTable,
-        Key: { photoId, userId },
+        Key: { photoId },
         UpdateExpression: 'set description=:description',
         ExpressionAttributeValues: {
           ':description': updatePhoto.description
@@ -72,7 +73,26 @@ export default class PhotoStore {
     return null
   }
 
-  async getUserPhotos(userId?: string): Promise<PhotoItem[]> {
+
+  async getUserPhoto(photoId: string, userId: string): Promise<PhotoItem> {
+    const result = await this.docClient
+      .query({
+        TableName: photosTable,
+        IndexName: photoUserIndex,
+        KeyConditionExpression: 'photoId = :photoId AND userId = :userId',
+        ExpressionAttributeValues: {
+          ':photoId': photoId,
+          ':userId': userId
+        }
+      })
+      .promise()
+
+    if (result.Count > 0) return result.Items[0] as PhotoItem
+
+    return null
+  }
+
+  async getUserPhotos(userId: string): Promise<PhotoItem[]> {
     const result = await this.docClient
       .query({
         TableName: photosTable,
@@ -115,20 +135,30 @@ export default class PhotoStore {
     return `https://${bucketName}.s3.amazonaws.com/${photoId}_image.png`
   }
 
-  async increase(stat: string, by: number, photoId: string) {
-    try {
-      await this.docClient
-        .update({
-          TableName: photosTable,
-          Key: { photoId },
-          UpdateExpression: `set ${stat} = if_not_exists(${stat}, :start)+ :incr`,
-          ExpressionAttributeValues: { ':incr': { N: `${by}` }, ':start': 0 },
-          ReturnValues: 'UPDATED_NEW'
-        })
-        .promise()
-    } catch (error) {}
+  async increaseLikes(photoId: string, by: number = 1) {
+    await this.docClient
+      .update({
+        TableName: photosTable,
+        Key: { photoId },
+        ExpressionAttributeNames: { '#V': 'likes' },
+        UpdateExpression: 'set #V = #V + :val',
+        ExpressionAttributeValues: { ':val': by }
+      })
+      .promise()
+  }
 
-    return
+  async increaseViews(photoId: string, by: number = 1) {
+    return await this.docClient
+      .update({
+        TableName: photosTable,
+        Key: { photoId },
+        ExpressionAttributeNames: { '#V': 'views' },
+        UpdateExpression: 'set #V = #V + :val',
+        ExpressionAttributeValues: {
+          ':val': by
+        }
+      })
+      .promise()
   }
 
   async decrease(stat: string, by: number, photoId: string) {

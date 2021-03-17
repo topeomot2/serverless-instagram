@@ -6,7 +6,7 @@ import { createLogger } from '../../utils/logger'
 import { getUserId } from '../utils'
 import { viewPhoto } from '../../businessLogic/Photos'
 
-const logger = createLogger('like_photo_lambda')
+const logger = createLogger('view_photo_lambda')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     logger.info('Processing event: ', event)
@@ -15,8 +15,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   
     try {
       
-      await viewPhoto(photoId, userId)
-      logger.info('new photo view added', { photoId, userId })
+      const response = await viewPhoto(photoId, userId)
+      //logger.info('new photo view added', { photoId, userId })
+      logger.info('new photo view added', { response })
       return {
         statusCode: 200,
         headers: {

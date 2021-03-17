@@ -37,9 +37,10 @@ provider:
   environment:
     PHOTOS_TABLE: Photos-${self:provider.stage}
     USER_ID_INDEX: UserIdIndex
+    PHOTO_ID_INDEX: PhotoIdIndex
     PHOTOS_S3_BUCKET: instagram-serverless-images-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
-    FOLLOWS_TABLE: Follows-${self:provider.stage}
+    FOLLOWS_TABLE: UserFollows-${self:provider.stage}
     FOLLOWERS_INDEX: FollowersIndex
     USER_STATS_TABLE: User-stats-${self:provider.stage}
 
@@ -133,6 +134,11 @@ functions:
         Action:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.PHOTOS_TABLE}/index/${self:provider.environment.PHOTO_ID_INDEX}
+    
   
   FollowUser:
     handler: src/lambda/http/followUser.handler
@@ -185,7 +191,7 @@ functions:
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
 
   ViewPhoto:
-    handler: src/lambda/http/likePhoto.handler
+    handler: src/lambda/http/viewPhoto.handler
     events:
       - http:
           method: post
@@ -227,6 +233,21 @@ functions:
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
 
+  GetUserStats:
+    handler: src/lambda/http/getUserStats.handler
+    events:
+      - http:
+          method: get
+          path: stats
+          cors: true
+    iamRoleStatementsName: ${self:service.name}-get-user-stats-role-${self:provider.stage}
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:GetItem
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USER_STATS_TABLE}
+    
+
 resources:
   Resources:
     RequestBodyValidator:
@@ -260,8 +281,6 @@ resources:
         KeySchema:
           - AttributeName: photoId
             KeyType: HASH
-          - AttributeName: userId
-            KeyType: RANGE  
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.PHOTOS_TABLE}
         GlobalSecondaryIndexes:
@@ -271,6 +290,14 @@ resources:
               KeyType: HASH
             - AttributeName: createdAt
               KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+          - IndexName: ${self:provider.environment.PHOTO_ID_INDEX}
+            KeySchema:
+            - AttributeName: photoId
+              KeyType: HASH
+            - AttributeName: userId
+              KeyType: RANGE  
             Projection:
               ProjectionType: ALL
     FollowDynamoDBTable:
@@ -286,7 +313,7 @@ resources:
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: createdAt
+          - AttributeName: followedId
             KeyType: RANGE  
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.FOLLOWS_TABLE}

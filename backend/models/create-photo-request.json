@@ -6,13 +6,10 @@
       "photoId": {
         "type": "string"
       },
-      "photoUrl": {
-        "type": "string"
-      },
       "description": {
         "type": "string"
       }
     },
-    "required": ["photoId", "photoUrl", "description"],
+    "required": ["photoId", "description"],
     "additionalProperties": false
   }
